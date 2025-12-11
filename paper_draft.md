@@ -33,33 +33,33 @@ The field of secure messaging has evolved significantly over the last two decade
 
 ---
 
-## 3. Methodology and Proposed Approach
+## 3. Metodologi dan Pendekatan yang Diusulkan
 
-### A. System Architecture
-The system follows a client-server architecture where the server is treated as "untrusted" regarding message content.
-1.  **Frontend (Trusted Client)**: Built with React.js. It handles user authentication (Google OAuth), key generation, encryption/decryption, and UI rendering. All cryptographic operations occur here.
-2.  **Backend (Untrusted Courier)**: Built with Python FastAPI. It manages WebSocket connections for real-time delivery and an SQLite database for persistent storage of encrypted blobs. It does not possess any decryption keys.
+### A. Arsitektur Sistem
+Sistem ini mengikuti arsitektur client-server di mana server diperlakukan sebagai entitas "tidak terpercaya" (untrusted) terkait konten pesan.
+1.  **Frontend (Klien Terpercaya)**: Dibangun menggunakan React.js. Komponen ini menangani otentikasi pengguna (Google OAuth), pembuatan kunci, enkripsi/dekripsi, dan tampilan antarmuka (UI). Semua operasi kriptografi terjadi di sisi ini.
+2.  **Backend (Kurir Tidak Terpercaya)**: Dibangun menggunakan Python FastAPI. Komponen ini mengelola koneksi WebSocket untuk pengiriman pesan secara real-time dan basis data SQLite untuk penyimpanan persisten blob terenkripsi. Backend tidak memiliki akses ke kunci dekripsi apa pun.
 
-### B. Cryptographic Primitives
-We employ a hybrid encryption strategy to balance performance and security:
-*   **Text Encryption (ChaCha20-Poly1305)**: We use the ChaCha20 stream cipher with Poly1305 authenticator (RFC 7539). ChaCha20 is chosen for its superior performance in software implementations, particularly on mobile devices without hardware AES acceleration.
-*   **File Encryption (AES-256-GCM)**: For large media files (images, videos), we utilize AES in Galois/Counter Mode (GCM). We leverage the browser's native `SubtleCrypto` API, which provides hardware-accelerated AES performance, crucial for large binary blobs.
-*   **Key Derivation**: For this prototype, symmetric session keys ("Room Keys") are derived or exchanged out-of-band to simulate a secured channel. In a production version, this would be replaced by an X3DH (Extended Triple Diffie-Hellman) key exchange.
+### B. Primitif Kriptografi
+Kami menerapkan strategi enkripsi hibrida untuk menyeimbangkan performa dan keamanan:
+*   **Enkripsi Teks (ChaCha20-Poly1305)**: Kami menggunakan stream cipher ChaCha20 dengan otentikator Poly1305 (RFC 7539). ChaCha20 dipilih karena performanya yang unggul dalam implementasi perangkat lunak, terutama pada perangkat seluler yang tidak memiliki akselerasi perangkat keras AES.
+*   **Enkripsi File (AES-256-GCM)**: Untuk file media berukuran besar (gambar, video), kami memanfaatkan AES dalam mode Galois/Counter (GCM). Kami menggunakan API `SubtleCrypto` bawaan browser, yang menyediakan performa AES dengan akselerasi perangkat keras, yang sangat krusial untuk blob biner besar.
+*   **Penurunan Kunci (Key Derivation)**: Untuk purwarupa ini, kunci sesi simetris ("Room Keys") diturunkan atau dipertukarkan secara out-of-band untuk mensimulasikan saluran yang aman. Dalam versi produksi, mekanisme ini akan digantikan oleh pertukaran kunci X3DH (Extended Triple Diffie-Hellman).
 
-### C. Message Flow
-1.  **Sender**:
-    *   Generates a random 96-bit nonce (IV).
-    *   Encrypts the plaintext $P$ using Key $K$: $C = Encrypt(K, IV, P)$.
-    *   Sends tuple $(C, IV, \text{TargetID})$ to the server via WebSocket.
+### C. Alur Pesan (Message Flow)
+1.  **Pengirim**:
+    *   Menghasilkan nonce 96-bit acak (IV).
+    *   Mengenkripsi plaintext $P$ menggunakan Kunci $K$: $C = Encrypt(K, IV, P)$.
+    *   Mengirimkan tuple $(C, IV, \text{TargetID})$ ke server melalui WebSocket.
 2.  **Server**:
-    *   Authenticates the sender via JWT.
-    *   Stores $(C, IV, \text{Timestamp})$ in the database.
-    *   Routes the payload to the recipient's active WebSocket connection.
-3.  **Recipient**:
-    *   Receives the payload.
-    *   Retrieves the shared Key $K$ from local secure storage.
-    *   Decrypts: $P = Decrypt(K, IV, C)$.
-    *   Renders the message (or generates an ObjectURL for media files).
+    *   Mengotentikasi pengirim melalui JWT.
+    *   Menyimpan $(C, IV, \text{Timestamp})$ ke dalam basis data.
+    *   Meneruskan payload ke koneksi WebSocket penerima yang aktif.
+3.  **Penerima**:
+    *   Menerima payload.
+    *   Mengambil Kunci $K$ yang dibagikan dari penyimpanan lokal yang aman.
+    *   Mendekripsi: $P = Decrypt(K, IV, C)$.
+    *   Menampilkan pesan (atau menghasilkan ObjectURL untuk file media).
 
 ---
 

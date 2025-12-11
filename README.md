@@ -79,6 +79,27 @@ A secure, end-to-end encrypted (E2EE) real-time chat application built with Reac
 5.  Search for a user by their username to start a chat.
 6.  Send messages or attach files.
 
+## Deployment with Docker
+
+You can easily deploy the entire stack using Docker Compose.
+
+### Prerequisites
+*   Docker and Docker Compose installed on your machine.
+
+### Steps
+1.  Ensure your `backend/.env` file is configured (see Backend Setup step 4).
+2.  Run the following command in the root directory:
+    ```bash
+    docker-compose up --build -d
+    ```
+3.  Access the application:
+    *   **Frontend**: `http://localhost:3000`
+    *   **Backend API**: `http://localhost:8000`
+
+### Troubleshooting
+*   If you change code, remember to rebuild: `docker-compose up --build -d`.
+*   If the database isn't saving, ensure permissions on `database.db` are correct if mounted.
+
 ## Security Note
 
 This project is a demonstration of E2EE principles.

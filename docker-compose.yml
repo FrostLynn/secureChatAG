@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: securechat_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      # Mount database so it persists on host (optional but recommended)
+      - ./backend/database.db:/app/database.db
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: securechat_frontend
+    ports:
+      - "3000:80"  # Map host port 3000 to container port 80 (nginx)
+    depends_on:
+      - backend
+    restart: always
