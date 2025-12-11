@@ -36,8 +36,17 @@ async def root():
 
 @app.get("/auth/login")
 async def login(request: Request):
-    # Redirect url: localhost:8000/auth/callback
-    redirect_uri = request.url_for('auth_callback')
+    # Redirect url: https://chat.frostlynn.my.id/auth/callback (Production)
+    # Or http://localhost:8000/auth/callback (Local)
+    domain = os.getenv('DOMAIN')
+    if domain:
+        # Strip trailing slash if present
+        domain = domain.rstrip('/')
+        redirect_uri = f"{domain}/auth/callback"
+    else:
+        # Fallback for localhost
+        redirect_uri = request.url_for('auth_callback')
+        
     print(f"DEBUG: Generated Redirect URI: {redirect_uri}")
     print(f"DEBUG: Client ID Loaded: {os.getenv('GOOGLE_CLIENT_ID', 'Not Found')[:10]}...")
     return await oauth.google.authorize_redirect(request, redirect_uri)
