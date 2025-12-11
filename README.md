@@ -93,7 +93,7 @@ You can easily deploy the entire stack using Docker Compose.
     docker-compose up --build -d
     ```
 3.  Access the application:
-    *   **Frontend**: `http://localhost:3000`
+    *   **Frontend**: `http://localhost:3001`
     *   **Backend API**: `http://localhost:8000`
 
 ### Troubleshooting

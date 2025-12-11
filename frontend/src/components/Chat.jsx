@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cryptoLib } from '../lib/crypto';
-import { api } from '../lib/api';
+import { api, API_URL } from '../lib/api';
 
 export default function Chat() {
     const navigate = useNavigate();
@@ -35,7 +35,9 @@ export default function Chat() {
             }
 
             console.log("Connecting to WebSocket...");
-            ws.current = new WebSocket(`ws://localhost:8000/ws/${u.id}`);
+            const wsProtocol = API_URL.startsWith("https") ? "wss" : "ws";
+            const wsHost = API_URL.replace(/^https?:\/\//, "");
+            ws.current = new WebSocket(`${wsProtocol}://${wsHost}/ws/${u.id}`);
 
             ws.current.onopen = () => {
                 console.log("WebSocket Connected");

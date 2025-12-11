@@ -21,7 +21,7 @@ export default function Login() {
 
     const handleLogin = () => {
         // Redirect to Backend Login logic
-        window.location.href = "http://localhost:8000/auth/login";
+        window.location.href = `${api.API_URL}/auth/login`;
     };
 
     return (
