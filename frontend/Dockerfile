@@ -20,6 +20,10 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # We overwrite the default config to ensure /foo redirects to index.html
 RUN echo 'server { \
     listen 80; \
+    client_max_body_size 50M; \
+    proxy_read_timeout 300s; \
+    proxy_connect_timeout 300s; \
+    proxy_send_timeout 300s; \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
