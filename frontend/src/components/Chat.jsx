@@ -179,38 +179,62 @@ export default function Chat() {
         } catch (e) { alert("Failed: " + e.message); }
     };
 
+    // Safe Uint8Array to Base64 conversion to avoid stack overflow
+    const arrayBufferToBase64 = (buffer) => {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        const chunkSize = 0x8000; // 32KB chunks
+        for (let i = 0; i < len; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+        }
+        return btoa(binary);
+    };
+
     const handleFileUpload = async (e) => {
         if (!activeChat) return;
         const file = e.target.files[0];
         if (!file) return;
+
+        // Limit file size to avoid browser crash on mobile (e.g. 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+            alert("File is too large (Max 50MB)");
+            return;
+        }
 
         if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
             alert("Connection lost. Please wait for reconnection...");
             return;
         }
 
-        const arrayBuffer = await file.arrayBuffer();
-        const aesResult = await cryptoLib.encryptAES(arrayBuffer);
-        const aesKeyBase64 = btoa(String.fromCharCode(...aesResult.key));
-        const encryptedKey = await cryptoLib.encryptChaCha(aesKeyBase64, secretKey);
-
-        const payload = {
-            target: activeChat.type,
-            target_id: activeChat.id,
-            sender_id: user.id,
-            sender_username: user.username,
-            type: 'file',
-            fileName: file.name,
-            encryptedContent: btoa(String.fromCharCode(...aesResult.encrypted)),
-            iv: Array.from(aesResult.iv),
-            encryptedKey: encryptedKey
-        };
-
         try {
+            const arrayBuffer = await file.arrayBuffer();
+            const aesResult = await cryptoLib.encryptAES(arrayBuffer);
+
+            // Fix: Use safe conversion instead of spread operator
+            const aesKeyBase64 = btoa(String.fromCharCode(...aesResult.key)); // Key is small (32 bytes), safe to spread
+            const encryptedKey = await cryptoLib.encryptChaCha(aesKeyBase64, secretKey);
+
+            // Large content needs safe conversion
+            const encryptedContentBase64 = arrayBufferToBase64(aesResult.encrypted);
+
+            const payload = {
+                target: activeChat.type,
+                target_id: activeChat.id,
+                sender_id: user.id,
+                sender_username: user.username,
+                type: 'file',
+                fileName: file.name,
+                encryptedContent: encryptedContentBase64,
+                iv: Array.from(aesResult.iv),
+                encryptedKey: encryptedKey
+            };
+
             ws.current.send(JSON.stringify(payload));
             addMessage(getChatKey(activeChat), { text: `Sent file: ${file.name}`, isMine: true });
         } catch (e) {
-            alert("Failed to send file: " + e.message);
+            console.error(e);
+            alert("Failed to process file: " + e.message);
         }
     };
 
